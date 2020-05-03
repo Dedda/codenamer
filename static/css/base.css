@@ -1,0 +1,15 @@
+.board {
+    width: 50%;
+    height: 50%;
+    margin: auto;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    justify-content: center;
+}
+
+.board-card {
+    background-color: #98fb98;
+    padding: 2em;
+    margin: .1em;
+}

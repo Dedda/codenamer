@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+Game: {{ game_name }}
+<div class="board">
+    {% for card in cards %}
+    <div class="board-card">{{ card.word }}</div>
+    {% endfor %}
+</div>
+</body>
+</html>
