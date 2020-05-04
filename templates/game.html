@@ -24,7 +24,15 @@
             }
         }
         let game_state = function game_state(data) {
-            document.getElementById('player').innerText = data.team;
+            let elem = document.getElementById('player');
+            elem.innerText = data.team;
+            if (data.team === 'red') {
+                elem.classList.remove('blue-player');
+                elem.classList.add('red-player');
+            } else if (data.team === 'blue') {
+                elem.classList.remove('red-player');
+                elem.classList.add('blue-player');
+            }
         }
         window.c = wsConnection();
         window.c.onmessage = function (msg) {
@@ -67,7 +75,7 @@
 </head>
 <body>
 Game: {{ game_name }}<br>
-Player: <span id="player">red</span>
+Player: <span id="player" class="red-player">red</span>
 <div class="board">
     {% for card in cards %}
     <div id="card-{{ card.word }}" class="board-card">{{ card.word }}</div>

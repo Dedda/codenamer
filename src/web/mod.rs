@@ -1,30 +1,14 @@
-use crate::game::cache::{GameSessionCache, RamGameCache};
+use std::sync::{Arc, Mutex};
 
 use askama::Template;
-use std::sync::{Arc, Mutex};
-use crate::game::Game;
 use rocket_contrib::serve::StaticFiles;
 
-lazy_static! {
-    static ref GAME_CACHE: Arc<Mutex<Box<dyn GameSessionCache + Send>>> = {
-        Arc::new(Mutex::new(Box::new(RamGameCache::new())))
-    };
-}
+use crate::game::Game;
+use crate::game_cache;
 
 pub mod socket;
 
-pub fn game_cache() -> Arc<Mutex<Box<dyn GameSessionCache + Send>>> {
-    GAME_CACHE.clone()
-}
-
-pub fn start<C>(game_cache: Option<C>) where C: 'static + GameSessionCache + Send {
-    {
-        let mut static_game_cache = GAME_CACHE.lock().unwrap();
-        if let Some(cache) = game_cache {
-            *static_game_cache = Box::new(cache);
-        }
-        println!("Running games in cache: {}", static_game_cache.count());
-    }
+pub fn start() {
     let rocket = rocket::Rocket::ignite();
     let rocket = rocket.mount("/css", StaticFiles::from("static/css"));
     let rocket = rocket.mount("/js", StaticFiles::from("static/js"));
@@ -44,7 +28,7 @@ struct Index {
 #[get("/")]
 fn index() -> Index {
     Index {
-        num_running_games: GAME_CACHE.lock().unwrap().count(),
+        num_running_games: game_cache().lock().unwrap().count(),
     }
 }
 
@@ -72,7 +56,8 @@ impl From<Arc<Mutex<Game>>> for GamePage {
 
 #[get("/g/<game_name>")]
 fn game(game_name: String) -> GamePage {
-    let mut cache = GAME_CACHE.lock().unwrap();
+    let gc = game_cache();
+    let mut cache = gc.lock().unwrap();
     let g = if let Some(g) = cache.by_name(&game_name) {
         g
     } else {

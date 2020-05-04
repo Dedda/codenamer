@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 askama = { version = "0.8", features = ["with-rocket"] }
 colored = "1.9"
+itertools = "0.9"
 lazy_static = "1.4"
 rand = "0.7"
 rocket = "0.4"

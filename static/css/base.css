@@ -30,3 +30,11 @@
     background-color: darkslategrey;
     color: lightgrey;
 }
+
+.red-player {
+    color: red;
+}
+
+.blue-player {
+    color: blue;
+}

@@ -31,7 +31,12 @@
     "pipe",
     "bread",
     "fort",
-    "light"
+    "light",
+    "venice",
+    "state",
+    "liquid",
+    "chrome",
+    "theater"
   ],
   "german": [
     "Uhr",
@@ -63,6 +68,10 @@
     "Brot",
     "Festung",
     "Ampel",
-    "Pilz"
+    "Pilz",
+    "Venedig",
+    "Flüssigkeit",
+    "Chrom",
+    "Theater"
   ]
 }

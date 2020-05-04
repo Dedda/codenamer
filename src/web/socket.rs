@@ -3,6 +3,7 @@ use serde_json::{Value, Map};
 use crate::game::{RevealOutcome, Color, Team, Game};
 use serde::export::TryFrom;
 use crate::print::ColoredDesc;
+use crate::game_cache;
 
 #[derive(Debug)]
 enum MsgParseError {
@@ -144,7 +145,7 @@ fn steps(obj: &Map<String, Value>) -> Result<Vec<Step>, MsgParseError> {
 }
 
 fn reveal(g: &str, r: &Reveal) -> Option<Value> {
-    let cache = super::game_cache();
+    let cache = game_cache();
     let lock = cache.lock().unwrap();
     if let Some(game) = lock.by_name(&g) {
         let mut game_lock = game.lock().unwrap();
@@ -186,7 +187,7 @@ impl Into<Value> for GameState {
 }
 
 fn game_state(g: &str) -> Value {
-    let cache = super::game_cache();
+    let cache = game_cache();
     let lock = cache.lock().unwrap();
     if let Some(game) = lock.by_name(&g) {
         let game: Game = game.lock().unwrap().clone();
