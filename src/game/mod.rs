@@ -77,26 +77,47 @@ impl Game {
         if self.winner.is_some() {
             return Nop;
         }
+        let mut outcome = Nop;
         let word = self.words.iter_mut().find(|w| w.word.eq(word));
         if let Some(w) = word {
-            if w.opened {
-                Nop
-            } else {
+            if !w.opened {
                 w.opened = true;
                 match &w.team {
                     Team::Player(color) => {
-                        if color.eq(&self.turn) {
-                        } else {
-                            self.winner = Some(self.turn.invert());
+                        if color.ne(&self.turn) {
+                            self.turn = self.turn.invert();
                         }
                     },
                     Team::None => self.turn = self.turn.invert(),
                     Team::Death => self.winner = Some(self.turn.invert()),
                 }
-                Opened(w.word.clone(), w.team.clone())
+
+                outcome = Opened(w.word.clone(), w.team.clone());
             }
+        }
+        let winner = self.determine_winner();
+        self.winner = winner;
+        outcome
+    }
+
+    fn determine_winner(&self) -> Option<Color> {
+        println!("winner is: {:?}", &self.winner);
+        if self.winner.is_some() {
+            self.winner.clone()
         } else {
-            Nop
+            for color in vec![Color::Red, Color::Blue] {
+                let team = Team::Player(color.clone());
+                let number = number_of_words_for_team(&team);
+                let revealed = self.words.iter()
+                    .filter(|w| w.opened)
+                    .filter(|w| w.team.eq(&team))
+                    .count();
+                println!("{} opened: {}", &color, &revealed);
+                if revealed >= number {
+                    return Some(color);
+                }
+            }
+            None
         }
     }
 }
@@ -140,5 +161,36 @@ fn number_of_words_for_team(team: &Team) -> usize {
         Player(Blue) => 8,
         Death => 1,
         None => 7,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    mod color {
+        use crate::game::Color::*;
+
+        #[test]
+        fn invert_team_color() {
+            assert_eq!(Blue, Red.invert());
+            assert_eq!(Red, Blue.invert());
+        }
+
+        #[test]
+        fn test_color_to_string() {
+            assert_eq!("red", Red.to_string());
+            assert_eq!("blue", Blue.to_string());
+        }
+    }
+
+    mod game {
+        use crate::game::Color::*;
+        use crate::game::Game;
+
+        #[test]
+        fn test_determine_existing_winner() {
+            let mut game = Game::new("test".into(), "german").unwrap();
+            game.winner = Some(Red);
+            assert_eq!(game.winner, game.determine_winner());
+        }
     }
 }
