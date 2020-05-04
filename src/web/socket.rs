@@ -41,7 +41,7 @@ struct Msg {
 }
 
 pub fn start() {
-    listen("127.0.0.1:9123", |out| {
+    listen("0.0.0.0:9123", |out| {
         move |message| {
             if let Ok(msg) = Msg::try_from(message) {
                 let Msg {
