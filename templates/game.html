@@ -2,12 +2,54 @@
 <html>
 <head>
     <link rel="stylesheet" href="/css/base.css">
+    <script src="/js/base.js"></script>
+    <script>
+        let reveal = function reveal(data) {
+            let card = document.getElementById('card-' + data.word);
+            if (card !== undefined) {
+                switch (data.team) {
+                    case 'blue':
+                        card.classList.add('blue-card');
+                        break;
+                    case 'red':
+                        card.classList.add('red-card');
+                        break;
+                    case 'none':
+                        card.classList.add('grey-card');
+                        break;
+                    case 'death':
+                        card.classList.add('black-card');
+                        break;
+                }
+            }
+        }
+        let game_state = function game_state(data) {
+            document.getElementById('player').innerText = data.team;
+        }
+        window.c = wsConnection();
+        window.c.onmessage = function (msg) {
+            console.log(msg.data);
+            let data = JSON.parse(msg.data);
+            let game = data.game;
+            console.log('update for game: ' + game);
+            data.steps.forEach(function (step) {
+                if (typeof step === 'object') {
+                    if (step.type === 'reveal') {
+                        reveal(step);
+                    } else if (step.type === 'state') {
+                        game_state(step);
+                    }
+                }
+            });
+        }
+    </script>
 </head>
 <body>
-Game: {{ game_name }}
+Game: {{ game_name }}<br>
+Player: <span id="player">red</span>
 <div class="board">
     {% for card in cards %}
-    <div class="board-card">{{ card.word }}</div>
+    <div id="card-{{ card.word }}" class="board-card">{{ card.word }}</div>
     {% endfor %}
 </div>
 </body>

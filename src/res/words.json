@@ -27,7 +27,11 @@
     "triangle",
     "die",
     "card",
-    "piano"
+    "piano",
+    "pipe",
+    "bread",
+    "fort",
+    "light"
   ],
   "german": [
     "Uhr",
@@ -54,6 +58,11 @@
     "Würfel",
     "Dreieck",
     "Karte",
-    "Klavier"
+    "Klavier",
+    "Rohr",
+    "Brot",
+    "Festung",
+    "Ampel",
+    "Pilz"
   ]
 }

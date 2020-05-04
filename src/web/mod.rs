@@ -11,6 +11,12 @@ lazy_static! {
     };
 }
 
+pub mod socket;
+
+pub fn game_cache() -> Arc<Mutex<Box<dyn GameSessionCache + Send>>> {
+    GAME_CACHE.clone()
+}
+
 pub fn start<C>(game_cache: Option<C>) where C: 'static + GameSessionCache + Send {
     {
         let mut static_game_cache = GAME_CACHE.lock().unwrap();
@@ -22,9 +28,12 @@ pub fn start<C>(game_cache: Option<C>) where C: 'static + GameSessionCache + Sen
     let rocket = rocket::Rocket::ignite();
     let rocket = rocket.mount("/css", StaticFiles::from("static/css"));
     let rocket = rocket.mount("/js", StaticFiles::from("static/js"));
-    let rocket = rocket.mount("/", routes![index, game]);
+    let rocket = rocket.mount("/", routes![favicon, index, game]);
     rocket.launch();
 }
+
+#[get("/favicon.ico")]
+fn favicon() {}
 
 #[derive(Template)]
 #[template(path = "index.html")]

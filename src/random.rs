@@ -22,7 +22,7 @@ impl<T> GetRandom<T> for &Vec<T> where T: Clone {
         let mut selected: Vec<T> = Vec::new();
         for _ in 0..n {
             let index = rng.gen_range(0, indices.len());
-            indices.remove(index);
+            let index = indices.remove(index);
             selected.push(self.get(index).unwrap().clone())
         }
         selected

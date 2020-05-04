@@ -9,7 +9,24 @@
 }
 
 .board-card {
-    background-color: #98fb98;
+    background-color: #ffebcd;
     padding: 2em;
     margin: .1em;
+}
+
+.blue-card {
+    background-color: #6495ed;
+}
+
+.red-card {
+    background-color: #db7093;
+}
+
+.grey-card {
+    background-color: grey;
+}
+
+.black-card {
+    background-color: darkslategrey;
+    color: lightgrey;
 }
