@@ -42,6 +42,27 @@
                 }
             });
         }
+        let addClickListenerForWord = function addClickListenerForWord(word) {
+            let id = 'card-' + word;
+            let elem = document.getElementById(id);
+            let clickListener = function () {
+                window.c.send(
+                    JSON.stringify({
+                        game: '{{ game_name }}',
+                        steps: [
+                            {type: 'reveal', word: word}
+                        ]
+                    })
+                );
+                elem.removeEventListener('click', this);
+            };
+            elem.addEventListener('click', clickListener);
+        }
+        let addClickListeners = function () {
+            {% for card in cards %}
+                addClickListenerForWord('{{ card.word }}')
+            {% endfor %}
+        };
     </script>
 </head>
 <body>
@@ -52,5 +73,10 @@ Player: <span id="player">red</span>
     <div id="card-{{ card.word }}" class="board-card">{{ card.word }}</div>
     {% endfor %}
 </div>
+<script>
+    (function () {
+        addClickListeners();
+    })();
+</script>
 </body>
 </html>
