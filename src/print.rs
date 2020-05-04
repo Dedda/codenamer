@@ -7,6 +7,15 @@ pub trait ColoredDesc {
 
 const GAME_DESC_DELIMITER: &'static str = "==================";
 
+impl ColoredDesc for Color {
+    fn desc_colored(&self) -> String {
+        match self {
+            Color::Red => "red".red(),
+            Color::Blue => "blue".blue(),
+        }.to_string()
+    }
+}
+
 impl ColoredDesc for Game {
     fn desc_colored(&self) -> String {
         let mut field = String::new();
@@ -25,10 +34,16 @@ impl ColoredDesc for Game {
             }
             field = format!("{}\n{}", field, line);
         }
+        let is_won = self.winner.is_some();
         format!(
-            "{}\nGame: {}\n{}\n{}",
+            "{}\nGame: {}\n{}: {}\n{}\n{}",
             GAME_DESC_DELIMITER,
-            if self.turn.eq(&Color::Red) { self.name.red() } else { self.name.blue() },
+            &self.name,
+            if is_won { "winner" } else { "turn" },
+            {
+                let color = if is_won { self.winner.clone().unwrap() } else { self.turn.clone() };
+                color.desc_colored()
+            },
             field,
             GAME_DESC_DELIMITER
         )
