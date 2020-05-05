@@ -1,5 +1,6 @@
-use crate::game::{Game, Team, Color, GameWord};
 use colored::Colorize;
+
+use crate::game::{Color, Game, GameWord, Team};
 
 pub trait ColoredDesc {
     fn desc_colored(&self) -> String;

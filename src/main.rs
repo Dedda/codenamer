@@ -14,10 +14,11 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate ws;
 
-use crate::game::cache::{RamGameCache, GameSessionCache};
-use std::thread::{spawn, sleep};
-use std::time::Duration;
 use std::sync::{Arc, Mutex};
+use std::thread::{sleep, spawn};
+use std::time::Duration;
+
+use crate::game::cache::{GameSessionCache, RamGameCache};
 
 pub mod game;
 pub mod print;

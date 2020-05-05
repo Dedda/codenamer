@@ -1,12 +1,14 @@
-use crate::game::Color::{Red, Blue};
-use crate::res::words::NoSuchLanguageError;
-use std::time::SystemTime;
-use crate::game::RevealOutcome::{Nop, Opened};
-use rand::thread_rng;
-use rand::seq::SliceRandom;
-use crate::print::ColoredDesc;
 use std::fmt::Display;
+use std::time::SystemTime;
+
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 use serde::export::Formatter;
+
+use crate::game::Color::{Blue, Red};
+use crate::game::RevealOutcome::{Nop, Opened};
+use crate::print::ColoredDesc;
+use crate::res::words::NoSuchLanguageError;
 
 pub mod cache;
 

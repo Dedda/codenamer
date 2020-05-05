@@ -1,6 +1,6 @@
-use crate::random::GetRandom;
-
 use std::collections::HashMap;
+
+use crate::random::GetRandom;
 
 lazy_static! {
     static ref WORDS: HashMap<String, Vec<String>> = {
