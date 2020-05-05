@@ -1,4 +1,4 @@
-use crate::game::{Game, Team, Color};
+use crate::game::{Game, Team, Color, GameWord};
 use colored::Colorize;
 
 pub trait ColoredDesc {
@@ -23,29 +23,42 @@ impl ColoredDesc for Game {
             let mut line = String::new();
             for x in 0..5 {
                 let word = self.words.get(x + y * 5).unwrap();
-                let open_status = if word.opened { "+" } else { "-" };
-                let word = match word.team {
-                    Team::Player(Color::Red) => word.word.red(),
-                    Team::Player(Color::Blue) => word.word.blue(),
-                    Team::None => word.word.white(),
-                    Team::Death => word.word.magenta(),
-                };
-                line = format!("{} {}{:^10}", line, open_status, word);
+                println!("Word: {}, desc: '{}'", word.word, word.desc_colored());
+                line = format!("{} {}", line, word.desc_colored());
             }
             field = format!("{}\n{}", field, line);
         }
         let is_won = self.winner.is_some();
+        let turn = if is_won { "winner" } else { "turn" };
+        let turn_team = if is_won { self.winner.clone().unwrap() } else { self.turn.clone() };
         format!(
             "{}\nGame: {}\n{}: {}\n{}\n{}",
             GAME_DESC_DELIMITER,
             &self.name,
-            if is_won { "winner" } else { "turn" },
-            {
-                let color = if is_won { self.winner.clone().unwrap() } else { self.turn.clone() };
-                color.desc_colored()
-            },
+            turn,
+            turn_team.desc_colored(),
             field,
             GAME_DESC_DELIMITER
         )
     }
+}
+
+impl ColoredDesc for GameWord {
+    fn desc_colored(&self) -> String {
+        let visibility = if self.opened { '+' } else { '-' };
+        let colored = color_for_team(&format!("{:^10}", self.word), &self.team);
+        format!("{}{}", visibility, colored)
+    }
+}
+
+fn color_for_team(text: &str, team: &Team) -> String {
+    use Color::*;
+    use Team::*;
+
+    match team {
+        Player(Red) => text.red(),
+        Player(Blue) => text.blue(),
+        None => text.white(),
+        Death => text.magenta(),
+    }.to_string()
 }
