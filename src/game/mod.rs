@@ -89,7 +89,7 @@ impl Game {
                         if color.ne(&self.turn) {
                             self.turn = self.turn.invert();
                         }
-                    },
+                    }
                     Team::None => self.turn = self.turn.invert(),
                     Team::Death => self.winner = Some(self.turn.invert()),
                 }
@@ -178,7 +178,7 @@ mod tests {
         }
 
         #[test]
-        fn test_color_to_string() {
+        fn color_to_string() {
             assert_eq!("red", Red.to_string());
             assert_eq!("blue", Blue.to_string());
         }
@@ -189,10 +189,41 @@ mod tests {
         use crate::game::Game;
 
         #[test]
-        fn test_determine_existing_winner() {
+        fn determine_existing_winner() {
             let mut game = Game::new("test".into(), "german").unwrap();
             game.winner = Some(Red);
             assert_eq!(game.winner, game.determine_winner());
+        }
+
+        mod determine_winner_by_revealed_cards {
+            use crate::game::{Game, Team, Color};
+
+            macro_rules! tests {
+                ($($name:ident: $value:expr,)*) => {
+                $(
+                    #[test]
+                    fn $name() {
+                        let color = $value;
+                        let mut game = Game::new("test".into(), "german").unwrap();
+                        game.winner = None;
+                        open_all_with_color(&mut game, color.clone());
+                        assert_eq!(Some(color), game.determine_winner());
+                    }
+                )*
+                }
+            }
+
+            tests! {
+            red: Color::Red,
+            blue: Color::Blue,
+            }
+
+            pub fn open_all_with_color(game: &mut Game, color: Color) {
+                let team = Team::Player(color);
+                game.words.iter_mut()
+                    .filter(|w| w.team.eq(&team))
+                    .for_each(|w| w.opened = true);
+            }
         }
     }
 }
