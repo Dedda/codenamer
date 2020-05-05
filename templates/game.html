@@ -71,6 +71,9 @@
                 addClickListenerForWord('{{ card.word }}')
             {% endfor %}
         };
+        let copyJoinLink = function copyJoinLink() {
+            copyToClipboard(window.location.href);
+        };
     </script>
 </head>
 <body>
@@ -81,6 +84,7 @@ Player: <span id="player" class="red-player">red</span>
     <div id="card-{{ card.word }}" class="board-card">{{ card.word }}</div>
     {% endfor %}
 </div>
+<button type="button" onclick="copyJoinLink()">Copy Link</button>
 <script>
     (function () {
         addClickListeners();

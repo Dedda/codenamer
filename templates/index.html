@@ -3,9 +3,27 @@
 <head>
     <link rel="stylesheet" href="/css/base.css">
     <script src="/js/base.js"></script>
+    <script>
+        let join = function join() {
+            let gameName = document.getElementById('game-name-input').value;
+            window.location.href = '/g/' + gameName;
+        }
+    </script>
 </head>
 <body>
 <h1>Codenamer</h1>
 <p>{{ num_running_games }} games currently played.</p>
+Game Name:
+<input type="text" id="game-name-input">
+<button type="button" onclick="join()">
+    Join
+</button>
+<script>
+    document.getElementById('game-name-input').addEventListener('keyup', function (event) {
+        if (event.keyCode === 13) {
+            join();
+        }
+    });
+</script>
 </body>
 </html>
