@@ -41,3 +41,14 @@ pub fn get_25_random(language: &str) -> Result<Vec<String>, NoSuchLanguageError>
         Err(NoSuchLanguageError(language.to_string()))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::get_25_random;
+
+    #[test_case("german" => 25)]
+    #[test_case("english" => 25)]
+    fn get_25_gets_25(language: &str) -> usize {
+        get_25_random(language).unwrap().len()
+    }
+}

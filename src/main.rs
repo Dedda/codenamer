@@ -12,6 +12,9 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+#[cfg(test)]
+#[macro_use]
+extern crate test_case;
 extern crate ws;
 
 use std::sync::{Arc, Mutex};

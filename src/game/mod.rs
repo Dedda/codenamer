@@ -169,24 +169,25 @@ fn number_of_words_for_team(team: &Team) -> usize {
 #[cfg(test)]
 mod tests {
     mod color {
+        use crate::game::Color;
         use crate::game::Color::*;
 
-        #[test]
-        fn invert_team_color() {
-            assert_eq!(Blue, Red.invert());
-            assert_eq!(Red, Blue.invert());
+        #[test_case(Red => Blue)]
+        #[test_case(Blue => Red)]
+        fn invert_team_color(actual: Color) -> Color {
+            actual.invert()
         }
 
-        #[test]
-        fn color_to_string() {
-            assert_eq!("red", Red.to_string());
-            assert_eq!("blue", Blue.to_string());
+        #[test_case(Red => "red")]
+        #[test_case(Blue => "blue")]
+        fn color_to_string(color: Color) -> String {
+            color.to_string()
         }
     }
 
     mod game {
         use crate::game::Color::*;
-        use crate::game::Game;
+        use crate::game::{Game, Color, Team};
 
         #[test]
         fn determine_existing_winner() {
@@ -195,35 +196,20 @@ mod tests {
             assert_eq!(game.winner, game.determine_winner());
         }
 
-        mod determine_winner_by_revealed_cards {
-            use crate::game::{Game, Team, Color};
+        #[test_case(Color::Red; "red")]
+        #[test_case(Color::Blue; "blue")]
+        fn determine_winner_by_revealed_cards(color: Color) {
+            let mut game = Game::new("test".into(), "german").unwrap();
+            game.winner = None;
+            open_all_with_color(&mut game, color.clone());
+            assert_eq!(Some(color), game.determine_winner());
+        }
 
-            macro_rules! tests {
-                ($($name:ident: $value:expr,)*) => {
-                $(
-                    #[test]
-                    fn $name() {
-                        let color = $value;
-                        let mut game = Game::new("test".into(), "german").unwrap();
-                        game.winner = None;
-                        open_all_with_color(&mut game, color.clone());
-                        assert_eq!(Some(color), game.determine_winner());
-                    }
-                )*
-                }
-            }
-
-            tests! {
-            red: Color::Red,
-            blue: Color::Blue,
-            }
-
-            pub fn open_all_with_color(game: &mut Game, color: Color) {
-                let team = Team::Player(color);
-                game.words.iter_mut()
-                    .filter(|w| w.team.eq(&team))
-                    .for_each(|w| w.opened = true);
-            }
+        pub fn open_all_with_color(game: &mut Game, color: Color) {
+            let team = Team::Player(color);
+            game.words.iter_mut()
+                .filter(|w| w.team.eq(&team))
+                .for_each(|w| w.opened = true);
         }
     }
 }
