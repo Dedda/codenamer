@@ -23,15 +23,25 @@
                 }
             }
         }
-        let game_state = function game_state(data) {
+        let set_team_label = function set_team_label(team) {
             let elem = document.getElementById('player');
-            elem.innerText = data.team;
-            if (data.team === 'red') {
+            elem.innerText = team;
+            if (team === 'red') {
                 elem.classList.remove('blue-player');
                 elem.classList.add('red-player');
-            } else if (data.team === 'blue') {
+            } else if (team === 'blue') {
                 elem.classList.remove('red-player');
                 elem.classList.add('blue-player');
+            }
+        };
+        let game_state = function game_state(data) {
+            let winner = data.winner;
+            if (winner !== undefined) {
+                set_team_label(winner);
+                let player_label = document.getElementById('player_label');
+                player_label.innerText = 'Winner';
+            } else {
+                set_team_label(data.team);
             }
         }
         window.c = wsConnection();
@@ -77,14 +87,19 @@
     </script>
 </head>
 <body>
-Game: {{ game_name }}<br>
-Player: <span id="player" class="red-player">red</span>
+<h1>Codenamer</h1>
+<div class="top-infobox">
+    <h3>Game: {{ game_name }}</h3>
+    <span id="player_label">Player</span>: <span id="player" class="red-player">red</span>
+</div>
 <div class="board">
     {% for card in cards %}
     <div id="card-{{ card.word }}" class="board-card">{{ card.word }}</div>
     {% endfor %}
 </div>
-<button type="button" onclick="copyJoinLink()">Copy Link</button>
+<div class="bottom-bar">
+    <button type="button" onclick="copyJoinLink()">Copy Link</button>
+</div>
 <script>
     (function () {
         addClickListeners();

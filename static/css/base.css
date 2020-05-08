@@ -1,7 +1,21 @@
+body {
+    font-size: 1.2em;
+}
+
+.top-infobox {
+    text-align: center;
+}
+
+h1 {
+    text-align: center;
+}
+
 .board {
-    width: 50%;
-    height: 50%;
     margin: auto;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    width: 70%;
+    height: 50%;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     grid-template-rows: repeat(5, 1fr);
@@ -9,9 +23,11 @@
 }
 
 .board-card {
-    background-color: #ffebcd;
+    background-color: #EEEEEE;
     padding: 2em;
     margin: .1em;
+    font-size: 1.3em;
+    text-align: center;
 }
 
 .blue-card {
@@ -37,4 +53,12 @@
 
 .blue-player {
     color: blue;
+}
+
+.bottom-bar {
+    width: 70%;
+    margin: auto;
+    display: grid;
+    grid-auto-flow: row;
+    justify-items: end;
 }
