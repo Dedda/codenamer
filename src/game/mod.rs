@@ -9,6 +9,7 @@ use crate::game::Color::{Blue, Red};
 use crate::game::RevealOutcome::{Nop, Opened};
 use crate::print::ColoredDesc;
 use crate::res::words::NoSuchLanguageError;
+use uuid::Uuid;
 
 pub mod cache;
 
@@ -56,6 +57,7 @@ pub enum RevealOutcome {
 #[derive(Clone)]
 pub struct Game {
     pub name: String,
+    pub ident: String,
     pub created: SystemTime,
     pub words: Vec<GameWord>,
     pub turn: Color,
@@ -66,6 +68,7 @@ impl Game {
     pub fn new(name: String, language: &str) -> Result<Self, NoSuchLanguageError> {
         let game = Game {
             name,
+            ident: Uuid::new_v4().to_string(),
             created: SystemTime::now(),
             words: words_for_game(language)?,
             turn: Red,

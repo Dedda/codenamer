@@ -41,6 +41,7 @@ struct Card {
 #[template(path = "game.html")]
 struct GamePage {
     game_name: String,
+    game_ident: String,
     cards: Vec<Card>,
 }
 
@@ -49,6 +50,7 @@ impl From<Arc<Mutex<Game>>> for GamePage {
         let guard = game.lock().unwrap();
         Self {
             game_name: guard.name.clone(),
+            game_ident: guard.ident.clone(),
             cards: guard.words.iter().map(|w| Card { word: w.word.clone(), }).collect(),
         }
     }

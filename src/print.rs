@@ -33,9 +33,10 @@ impl ColoredDesc for Game {
         let turn = if is_won { "winner" } else { "turn" };
         let turn_team = if is_won { self.winner.clone().unwrap() } else { self.turn.clone() };
         format!(
-            "{}\nGame: {}\n{}: {}\n{}\n{}",
+            "{}\nGame: {}\nIdent: {}\n{}: {}\n{}\n{}",
             GAME_DESC_DELIMITER,
             &self.name,
+            &self.ident,
             turn,
             turn_team.desc_colored(),
             field,

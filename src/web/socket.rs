@@ -29,12 +29,17 @@ struct Reveal {
 #[derive(Debug, PartialEq)]
 enum Step {
     Reveal(Reveal),
+    Reset(Reset),
 }
+
+#[derive(Debug, PartialEq)]
+struct Reset;
 
 impl Step {
     pub fn execute(&self, game: &str) -> Option<Value> {
         match self {
             Step::Reveal(r) => reveal(game, r),
+            Step::Reset(r) => reset(game, r),
         }
     }
 }
@@ -42,6 +47,7 @@ impl Step {
 #[derive(Debug, PartialEq)]
 struct Msg {
     pub game: String,
+    pub ident: String,
     pub steps: Vec<Step>,
 }
 
@@ -51,19 +57,37 @@ pub fn start() {
             if let Ok(msg) = Msg::try_from(message) {
                 let Msg {
                     game,
+                    ident,
                     steps
                 } = msg;
                 let mut response = Map::new();
                 response.insert("game".into(), Value::String(game.clone()));
                 let mut values = vec![];
-                for step in steps {
-                    if let Some(result) = step.execute(&game) {
-                        values.push(result);
+                let mut is_ident = false;
+                println!("client ident: {}", &ident);
+                {
+                    let cache = game_cache();
+                    let guard = cache.lock().unwrap();
+                    if let Some(game) = guard.by_name(&game) {
+                        if game.lock().unwrap().ident.eq(&ident) {
+                            is_ident = true;
+                        }
                     }
                 }
-                values.push(game_state(&game));
+                if is_ident {
+                    for step in steps {
+                        if let Some(result) = step.execute(&game) {
+                            values.push(result);
+                        }
+                    }
+                }
+                if let Some(state) = game_state(&game, &ident) {
+                    values.push(state);
+                }
                 response.insert("steps".into(), Value::Array(values));
-                out.send(Message::Text(serde_json::to_string(&response).unwrap()))
+                let text = serde_json::to_string(&response).unwrap();
+                println!("Response: {}", text);
+                out.send(Message::Text(text))
             } else {
                 Ok(())
             }
@@ -75,13 +99,16 @@ impl TryFrom<&String> for Msg {
     type Error = MsgParseError;
 
     fn try_from(value: &String) -> Result<Self, Self::Error> {
+        println!("client message: {}", value);
         let parsed: Value = serde_json::from_str(&value)?;
         match parsed {
             Value::Object(obj) => {
                 let game = game_name(&obj)?;
+                let ident = ident(&obj)?;
                 let steps = steps(&obj)?;
                 Ok(Self {
                     game,
+                    ident,
                     steps,
                 })
             }
@@ -109,6 +136,7 @@ impl TryFrom<&Map<String, Value>> for Step {
             Some(Value::String(step_type)) => {
                 match step_type.as_str() {
                     "reveal" => Ok(Step::Reveal(Reveal::try_from(value)?)),
+                    "reset" => Ok(Step::Reset(Reset::try_from(value)?)),
                     _ => Err(MsgParseError::TypeError),
                 }
             }
@@ -131,8 +159,24 @@ impl TryFrom<&Map<String, Value>> for Reveal {
     }
 }
 
+impl TryFrom<&Map<String, Value>> for Reset {
+    type Error = MsgParseError;
+
+    fn try_from(_value: &Map<String, Value>) -> Result<Self, Self::Error> {
+        Ok(Reset)
+    }
+}
+
 fn game_name(obj: &Map<String, Value>) -> Result<String, MsgParseError> {
     if let Some(Value::String(name)) = obj.get("game") {
+        Ok(name.clone())
+    } else {
+        Err(MsgParseError::InvalidJsonStructure)
+    }
+}
+
+fn ident(obj: &Map<String, Value>) -> Result<String, MsgParseError> {
+    if let Some(Value::String(name)) = obj.get("ident") {
         Ok(name.clone())
     } else {
         Err(MsgParseError::InvalidJsonStructure)
@@ -171,16 +215,32 @@ fn reveal(g: &str, r: &Reveal) -> Option<Value> {
     }
 }
 
+fn reset(g: &str, _r: &Reset) -> Option<Value> {
+    let cache = game_cache();
+    let mut lock = cache.lock().unwrap();
+    if lock.delete(g).is_err() {
+        eprintln!("error deleting game {}", g);
+    }
+    let mut map = Map::new();
+    map.insert("type".into(), Value::String("reload".into()));
+    Some(Value::Object(map))
+}
+
 struct GameState {
     pub current_team: Color,
     pub winner: Option<Color>,
+    pub revealed: Vec<RevealOutcome>,
 }
 
 impl From<Game> for GameState {
     fn from(game: Game) -> Self {
         Self {
             current_team: game.turn.clone(),
-            winner: game.winner,
+            winner: game.winner.clone(),
+            revealed: game.words.iter()
+                .filter(|gw| gw.opened)
+                .map(|gw| RevealOutcome::Opened(gw.word.clone(), gw.team.clone()))
+                .collect(),
         }
     }
 }
@@ -193,21 +253,30 @@ impl Into<Value> for GameState {
         if let Some(winner) = self.winner {
             map.insert("winner".into(), Value::String(winner.to_string()));
         };
+        map.insert("revealed".into(), Value::Array(self.revealed.into_iter()
+            .map(|outcome| outcome.into())
+            .collect()
+        ));
         Value::Object(map)
     }
 }
 
-fn game_state(g: &str) -> Value {
-    let cache = game_cache();
-    let lock = cache.lock().unwrap();
-    if let Some(game) = lock.by_name(&g) {
-        let game: Game = game.lock().unwrap().clone();
-        println!("{}", game.desc_colored());
-        let state = GameState::from(game);
-        state.into()
-    } else {
-        Value::Null
+fn game_state(g: &str, i: &str) -> Option<Value> {
+    {
+        let cache = game_cache();
+        let lock = cache.lock().unwrap();
+        if let Some(game) = lock.by_name(&g) {
+            let game: Game = game.lock().unwrap().clone();
+            if game.ident.eq(i) {
+                println!("{}", game.desc_colored());
+                let state = GameState::from(game);
+                return Some(state.into());
+            }
+        }
     }
+    let mut map = Map::new();
+    map.insert("type".into(), Value::String("reload".into()));
+    Some(Value::Object(map))
 }
 
 impl Into<Value> for RevealOutcome {

@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="/css/base.css">
     <script src="/js/base.js"></script>
     <script>
+        window.won = false;
         let reveal = function reveal(data) {
             let card = document.getElementById('card-' + data.word);
             if (card !== undefined) {
@@ -37,11 +38,16 @@
         let game_state = function game_state(data) {
             let winner = data.winner;
             if (winner !== undefined) {
+                window.won = true;
                 set_team_label(winner);
                 let player_label = document.getElementById('player_label');
                 player_label.innerText = 'Winner';
             } else {
                 set_team_label(data.team);
+            }
+            let revealed = data.revealed;
+            if (revealed !== undefined) {
+                revealed.forEach(reveal);
             }
         }
         window.c = wsConnection();
@@ -56,6 +62,8 @@
                         reveal(step);
                     } else if (step.type === 'state') {
                         game_state(step);
+                    } else if (step.type === 'reload') {
+                        location.reload();
                     }
                 }
             });
@@ -67,6 +75,7 @@
                 window.c.send(
                     JSON.stringify({
                         game: '{{ game_name }}',
+                        ident: '{{ game_ident }}',
                         steps: [
                             {type: 'reveal', word: word}
                         ]
@@ -80,6 +89,15 @@
             {% for card in cards %}
                 addClickListenerForWord('{{ card.word }}')
             {% endfor %}
+        };
+        let reset = function reset() {
+            window.c.send(JSON.stringify({
+                game: '{{ game_name }}',
+                ident: '{{ game_ident }}',
+                steps: [
+                    {type: 'reset'}
+                ]
+            }));
         };
         let copyJoinLink = function copyJoinLink() {
             copyToClipboard(window.location.href);
@@ -98,11 +116,26 @@
     {% endfor %}
 </div>
 <div class="bottom-bar">
+    <button type="button" onclick="reset()">Reset</button>
     <button type="button" onclick="copyJoinLink()">Copy Link</button>
 </div>
 <script>
     (function () {
         addClickListeners();
+        let update = function update() {
+            console.log('update');
+            window.c.send(
+                JSON.stringify({
+                    game: '{{ game_name }}',
+                    ident: '{{ game_ident }}',
+                    steps: []
+                })
+            );
+            if (!window.won) {
+                window.setTimeout(update, 1000);
+            }
+        };
+        window.setTimeout(update, 500);
     })();
 </script>
 </body>
