@@ -7,6 +7,7 @@ use serde::export::Formatter;
 
 use crate::game::Color::{Blue, Red};
 use crate::game::RevealOutcome::{Nop, Opened};
+#[cfg(debug)]
 use crate::print::ColoredDesc;
 use crate::res::words::NoSuchLanguageError;
 use uuid::Uuid;
@@ -74,7 +75,9 @@ impl Game {
             turn: Red,
             winner: None,
         };
-        println!("{}", game.desc_colored());
+        #[cfg(debug)] {
+            println!("{}", game.desc_colored());
+        }
         Ok(game)
     }
 

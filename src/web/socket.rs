@@ -5,6 +5,7 @@ use ws::{listen, Message};
 
 use crate::game::{Color, Game, RevealOutcome, Team};
 use crate::game_cache;
+#[cfg(debug)]
 use crate::print::ColoredDesc;
 
 #[derive(Debug)]
@@ -281,7 +282,9 @@ fn game_state(g: &str, i: &str) -> Option<Value> {
         if let Some(game) = lock.by_name(&g) {
             let game: Game = game.lock().unwrap().clone();
             if game.ident.eq(i) {
-                println!("{}", game.desc_colored());
+                #[cfg(debug)]{
+                    println!("{}", game.desc_colored());
+                }
                 let state = GameState::from(game);
                 return Some(state.into());
             }

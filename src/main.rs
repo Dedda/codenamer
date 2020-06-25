@@ -25,6 +25,7 @@ use std::time::Duration;
 use crate::game::cache::{GameSessionCache, RamGameCache};
 
 pub mod game;
+#[cfg(debug)]
 pub mod print;
 pub mod random;
 pub mod res;
