@@ -72,7 +72,7 @@ pub fn start() {
                     let cache = game_cache();
                     let guard = cache.lock().unwrap();
                     if let Some(game) = guard.by_name(&game) {
-                        if game.lock().unwrap().ident.eq(&ident) {
+                        if game.lock().unwrap().matches_ident(&ident) {
                             is_ident = true;
                         }
                     }

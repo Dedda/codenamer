@@ -81,6 +81,10 @@ impl Game {
         Ok(game)
     }
 
+    pub fn matches_ident(&self, ident: &str) -> bool {
+        self.ident.eq(ident)
+    }
+
     pub fn reveal(&mut self, word: &str) -> RevealOutcome {
         if self.winner.is_some() {
             return Nop;

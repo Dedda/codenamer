@@ -43,6 +43,10 @@ pub fn game_cache() -> Arc<Mutex<Box<dyn GameSessionCache + Send>>> {
     GAME_CACHE.clone()
 }
 
+fn one_day() -> Duration {
+    Duration::from_secs(24 * 60 * 60 * 1000)
+}
+
 fn main() {
     println!("Codenamer server v{}!", VERSION);
     println!("Languages: {}", res::words::languages().len());
@@ -57,12 +61,13 @@ fn main() {
     let web_socket_handle = spawn(|| {
         web::socket::start();
     });
+    println!("Visit http://127.0.0.1:8000/ to play");
     let clean_cache_handle = spawn(|| {
         loop {
             sleep(Duration::from_secs(5));
             let gc = game_cache();
             let mut cache = gc.lock().unwrap();
-            cache.cleanup(&Duration::from_secs(24 * 60 * 60 * 1000));
+            cache.cleanup(&one_day());
         }
     });
     web_handle.join().unwrap();

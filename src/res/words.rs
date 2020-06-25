@@ -7,12 +7,9 @@ lazy_static! {
         let data = include_bytes!("words.json");
         let data = std::str::from_utf8(data).unwrap();
         let map: HashMap<String, Vec<String>> = serde_json::from_str(data).unwrap();
-        for (language, list) in &map {
-            if list.len() < 25 {
-                panic!("Language {} contains less than 25 words!", language);
-            }
-        }
-        map
+        map.into_iter()
+            .filter(|(_, list)| list.len() >= 25)
+            .collect()
     };
 }
 

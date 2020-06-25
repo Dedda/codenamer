@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use askama::Template;
 use rocket_contrib::serve::StaticFiles;
 
-use crate::game::Game;
+use crate::game::{Game, GameWord};
 use crate::game_cache;
 
 pub mod socket;
@@ -38,6 +38,14 @@ struct Card {
     word: String
 }
 
+impl From<&GameWord> for Card {
+    fn from(w: &GameWord) -> Self {
+        Self {
+            word: w.word.clone(),
+        }
+    }
+}
+
 #[derive(Template)]
 #[template(path = "game.html")]
 struct GamePage {
@@ -52,7 +60,7 @@ impl From<Arc<Mutex<Game>>> for GamePage {
         Self {
             game_name: guard.name.clone(),
             game_ident: guard.ident.clone(),
-            cards: guard.words.iter().map(|w| Card { word: w.word.clone(), }).collect(),
+            cards: guard.words.iter().map(|w| w.into()).collect(),
         }
     }
 }
@@ -69,4 +77,37 @@ fn game(game_name: String) -> GamePage {
         cache.by_name(&game_name).unwrap()
     };
     g.into()
+}
+
+#[cfg(test)]
+mod tests {
+    mod card {
+        use crate::game::{GameWord, Team};
+        use crate::web::Card;
+
+        #[test]
+        fn from_game_word() {
+            let word = GameWord {
+                word: "horse".into(),
+                team: Team::None,
+                opened: false,
+            };
+            let card = Card::from(&word);
+            assert_eq!(word.word, card.word);
+        }
+    }
+
+    mod game_page {
+        use std::sync::{Arc, Mutex};
+        use crate::game::Game;
+        use crate::web::GamePage;
+
+        #[test]
+        fn from_game() {
+            let arc = Arc::new(Mutex::new(Game::new("abc".into(), "german").unwrap()));
+            let game_page = GamePage::from(arc.clone());
+            assert_eq!(game_page.game_name, arc.lock().unwrap().name);
+            assert_eq!(game_page.game_ident, arc.lock().unwrap().ident);
+        }
+    }
 }
