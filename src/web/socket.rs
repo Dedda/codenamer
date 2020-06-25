@@ -30,6 +30,7 @@ struct Reveal {
 enum Step {
     Reveal(Reveal),
     Reset(Reset),
+    Skip,
 }
 
 #[derive(Debug, PartialEq)]
@@ -40,6 +41,7 @@ impl Step {
         match self {
             Step::Reveal(r) => reveal(game, r),
             Step::Reset(r) => reset(game, r),
+            Step::Skip => skip(game),
         }
     }
 }
@@ -137,6 +139,7 @@ impl TryFrom<&Map<String, Value>> for Step {
                 match step_type.as_str() {
                     "reveal" => Ok(Step::Reveal(Reveal::try_from(value)?)),
                     "reset" => Ok(Step::Reset(Reset::try_from(value)?)),
+                    "skip" => Ok(Step::Skip),
                     _ => Err(MsgParseError::TypeError),
                 }
             }
@@ -224,6 +227,16 @@ fn reset(g: &str, _r: &Reset) -> Option<Value> {
     let mut map = Map::new();
     map.insert("type".into(), Value::String("reload".into()));
     Some(Value::Object(map))
+}
+
+fn skip(g: &str) -> Option<Value> {
+    let cache = game_cache();
+    let lock = cache.lock().unwrap();
+    if let Some(game) = lock.by_name(&g) {
+        let mut game_lock = game.lock().unwrap();
+        game_lock.turn = game_lock.turn.invert();
+    }
+    None
 }
 
 struct GameState {
@@ -336,6 +349,7 @@ mod tests {
     fn msg_from_string() {
         let expected = Msg {
             game: "Abc".into(),
+            ident: "ABC123".to_string(),
             steps: vec![
                 Step::Reveal(Reveal {
                     word: "show".into(),
@@ -345,6 +359,7 @@ mod tests {
         let actual = Msg::try_from(
             &r#"{
             "game": "Abc",
+            "ident": "ABC123",
             "steps": [
                 {
                     "type": "reveal",
@@ -404,7 +419,7 @@ mod tests {
     }
 
     #[test]
-    fn reveal_outome_to_value() {
+    fn reveal_outcome_to_value() {
         let value: Value = serde_json::from_str(
             r#"{
                 "type": "reveal",

@@ -7,6 +7,7 @@ use crate::game::Game;
 use crate::game_cache;
 
 pub mod socket;
+pub mod language;
 
 pub fn start() {
     let rocket = rocket::Rocket::ignite();

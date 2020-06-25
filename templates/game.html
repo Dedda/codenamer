@@ -90,6 +90,15 @@
                 addClickListenerForWord('{{ card.word }}')
             {% endfor %}
         };
+        let skip = function skip() {
+            window.c.send(JSON.stringify({
+                game: '{{ game_name }}',
+                ident: '{{ game_ident }}',
+                steps: [
+                    {type: 'skip'}
+                ]
+            }));
+        };
         let reset = function reset() {
             window.c.send(JSON.stringify({
                 game: '{{ game_name }}',
@@ -109,6 +118,7 @@
 <div class="top-infobox">
     <h3>Game: {{ game_name }}</h3>
     <span id="player_label">Player</span>: <span id="player" class="red-player">red</span>
+    <button type="button" onclick="skip()">Skip Turn</button>
 </div>
 <div class="board">
     {% for card in cards %}
@@ -116,7 +126,7 @@
     {% endfor %}
 </div>
 <div class="bottom-bar">
-    <button type="button" onclick="reset()">Reset</button>
+    <button type="button" onclick="reset()">New Game</button>
     <button type="button" onclick="copyJoinLink()">Copy Link</button>
 </div>
 <script>
