@@ -5,6 +5,7 @@
     <script src="/js/base.js"></script>
     <script>
         window.won = false;
+        window.spy = false;
         let reveal = function reveal(data) {
             let card = document.getElementById('card-' + data.word);
             if (card !== undefined) {
@@ -50,6 +51,27 @@
                 revealed.forEach(reveal);
             }
         }
+        let spyReveal = function spyReveal(data) {
+            window.spy = true;
+            data.cards.forEach(function(card) {
+            console.log('spying on card: ' + card.word);
+                let div = document.getElementById('spy-indicator-' + card.word);
+                switch (card.team) {
+                    case 'blue':
+                        div.classList.add('spy-blue');
+                        break;
+                    case 'red':
+                        div.classList.add('spy-red');
+                        break;
+                    case 'none':
+                        div.classList.add('spy-grey');
+                        break;
+                    case 'death':
+                        div.classList.add('spy-black');
+                        break;
+                }
+            });
+        };
         window.c = wsConnection();
         window.c.onmessage = function (msg) {
             console.log(msg.data);
@@ -64,6 +86,8 @@
                         game_state(step);
                     } else if (step.type === 'reload') {
                         location.reload();
+                    } else if (step.type === 'spy') {
+                        spyReveal(step);
                     }
                 }
             });
@@ -72,6 +96,9 @@
             let id = 'card-' + word;
             let elem = document.getElementById(id);
             let clickListener = function () {
+                if (window.spy) {
+                    return;
+                }
                 window.c.send(
                     JSON.stringify({
                         game: '{{ game_name }}',
@@ -99,6 +126,17 @@
                 ]
             }));
         };
+        let spy = function spy() {
+            if (!window.spy) {
+                window.c.send(JSON.stringify({
+                    game: '{{ game_name }}',
+                    ident: '{{ game_ident }}',
+                    steps: [
+                        {type: 'spy'}
+                    ]
+                }));
+            }
+        };
         let reset = function reset() {
             window.c.send(JSON.stringify({
                 game: '{{ game_name }}',
@@ -122,10 +160,14 @@
 </div>
 <div class="board">
     {% for card in cards %}
-    <div id="card-{{ card.word }}" class="board-card">{{ card.word }}</div>
+    <div id="card-{{ card.word }}" class="board-card">
+        <div id="spy-indicator-{{ card.word }}" class="spy-box"></div>
+        {{ card.word }}
+    </div>
     {% endfor %}
 </div>
 <div class="bottom-bar">
+    <button type="button" onclick="spy()">Spy</button>
     <button type="button" onclick="reset()">New Game</button>
     <button type="button" onclick="copyJoinLink()">Copy Link</button>
 </div>

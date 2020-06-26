@@ -6,8 +6,8 @@ use rocket_contrib::serve::StaticFiles;
 use crate::game::{Game, GameWord};
 use crate::game_cache;
 
-pub mod socket;
 pub mod language;
+pub mod socket;
 
 pub fn start() {
     let rocket = rocket::Rocket::ignite();

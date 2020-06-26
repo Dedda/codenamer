@@ -47,6 +47,30 @@ h1 {
     color: lightgrey;
 }
 
+.spy-box {
+    width: 1em;
+    height: 1em;
+    margin-left: -1.5em;
+    margin-top: -1.5em;
+    //position: absolute;
+}
+
+.spy-blue {
+    background-color: #6495ed;
+}
+
+.spy-red {
+    background-color: #db7093;
+}
+
+.spy-grey {
+    background-color: grey;
+}
+
+.spy-black {
+    background-color: darkslategrey;
+}
+
 .red-player {
     color: red;
 }

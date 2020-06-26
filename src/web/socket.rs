@@ -7,6 +7,7 @@ use crate::game::{Color, Game, RevealOutcome, Team};
 use crate::game_cache;
 #[cfg(debug)]
 use crate::print::ColoredDesc;
+use std::sync::{Arc, Mutex};
 
 #[derive(Debug)]
 enum MsgParseError {
@@ -32,6 +33,7 @@ enum Step {
     Reveal(Reveal),
     Reset(Reset),
     Skip,
+    Spy,
 }
 
 #[derive(Debug, PartialEq)]
@@ -43,6 +45,7 @@ impl Step {
             Step::Reveal(r) => reveal(game, r),
             Step::Reset(r) => reset(game, r),
             Step::Skip => skip(game),
+            Step::Spy => spy(game),
         }
     }
 }
@@ -141,6 +144,7 @@ impl TryFrom<&Map<String, Value>> for Step {
                     "reveal" => Ok(Step::Reveal(Reveal::try_from(value)?)),
                     "reset" => Ok(Step::Reset(Reset::try_from(value)?)),
                     "skip" => Ok(Step::Skip),
+                    "spy" => Ok(Step::Spy),
                     _ => Err(MsgParseError::TypeError),
                 }
             }
@@ -203,22 +207,6 @@ fn steps(obj: &Map<String, Value>) -> Result<Vec<Step>, MsgParseError> {
     }
 }
 
-fn reveal(g: &str, r: &Reveal) -> Option<Value> {
-    let cache = game_cache();
-    let lock = cache.lock().unwrap();
-    if let Some(game) = lock.by_name(&g) {
-        let mut game_lock = game.lock().unwrap();
-        let outcome = game_lock.reveal(&r.word);
-        if outcome.eq(&RevealOutcome::Nop) {
-            return None;
-        }
-        println!("Reveal outcome: {:?}", outcome);
-        Some(outcome.into())
-    } else {
-        None
-    }
-}
-
 fn reset(g: &str, _r: &Reset) -> Option<Value> {
     let cache = game_cache();
     let mut lock = cache.lock().unwrap();
@@ -230,12 +218,43 @@ fn reset(g: &str, _r: &Reset) -> Option<Value> {
     Some(Value::Object(map))
 }
 
+fn reveal(g: &str, r: &Reveal) -> Option<Value> {
+    with_game_name_do(g, |game| {
+        let mut game_lock = game.lock().unwrap();
+        let outcome = game_lock.reveal(&r.word);
+        if outcome.eq(&RevealOutcome::Nop) {
+            None
+        } else {
+            println!("Reveal outcome: {:?}", outcome);
+            Some(outcome.into())
+        }
+    })
+}
+
 fn skip(g: &str) -> Option<Value> {
+    with_game_name_do(g, |game| {
+        let mut game_lock = game.lock().unwrap();
+        game_lock.turn = game_lock.turn.invert();
+        None
+    })
+}
+
+fn spy(g: &str) -> Option<Value> {
     let cache = game_cache();
     let lock = cache.lock().unwrap();
     if let Some(game) = lock.by_name(&g) {
-        let mut game_lock = game.lock().unwrap();
-        game_lock.turn = game_lock.turn.invert();
+        let game: Game = game.lock().unwrap().clone();
+        let spy_data = SpyData::from(&game);
+        return Some(spy_data.into())
+    }
+    None
+}
+
+fn with_game_name_do<T>(g: &str, f: T) -> Option<Value> where T: Fn(Arc<Mutex<Game>>) -> Option<Value> {
+    let cache = game_cache();
+    let lock = cache.lock().unwrap();
+    if let Some(game) = lock.by_name(&g) {
+        return f(game)
     }
     None
 }
@@ -275,20 +294,63 @@ impl Into<Value> for GameState {
     }
 }
 
-fn game_state(g: &str, i: &str) -> Option<Value> {
-    {
-        let cache = game_cache();
-        let lock = cache.lock().unwrap();
-        if let Some(game) = lock.by_name(&g) {
-            let game: Game = game.lock().unwrap().clone();
-            if game.ident.eq(i) {
-                #[cfg(debug)]{
-                    println!("{}", game.desc_colored());
-                }
-                let state = GameState::from(game);
-                return Some(state.into());
-            }
+impl Into<Value> for Team {
+    fn into(self) -> Value {
+        match self {
+            Team::Player(color) => if color == Color::Red { "red" } else { "blue" },
+            Team::None => "none",
+            Team::Death => "death",
+        }.into()
+    }
+}
+
+struct SpyData {
+    pub cards: Vec<(String, Team)>,
+}
+
+impl From<&Game> for SpyData {
+    fn from(game: &Game) -> Self {
+        let cards = game.words.iter().map(|w| {
+            (w.word.clone(), w.team.clone())
+        }).collect();
+        Self {
+            cards
         }
+    }
+}
+
+impl Into<Value> for SpyData {
+    fn into(self) -> Value {
+        let mut map = Map::new();
+        map.insert("type".into(), Value::String("spy".into()));
+        map.insert("cards".into(), Value::Array(
+            self.cards
+                .into_iter()
+                .map(|(word, team)| {
+                    let mut map = Map::new();
+                    map.insert("word".into(), Value::String(word));
+                    map.insert("team".into(), team.into());
+                    Value::Object(map)
+                })
+                .collect())
+        );
+        Value::Object(map)
+    }
+}
+
+fn game_state(g: &str, i: &str) -> Option<Value> {
+    if let Some(v) = with_game_name_do(g, |game| {
+        let game: Game = game.lock().unwrap().clone();
+        if game.ident.eq(i) {
+            #[cfg(debug)]{
+                println!("{}", game.desc_colored());
+            }
+            let state = GameState::from(game);
+            return Some(state.into());
+        }
+        None
+    }) {
+        return Some(v);
     }
     let mut map = Map::new();
     map.insert("type".into(), Value::String("reload".into()));
@@ -301,11 +363,7 @@ impl Into<Value> for RevealOutcome {
             let mut map = Map::new();
             map.insert("type".into(), Value::String("reveal".into()));
             map.insert("word".into(), Value::String(word));
-            map.insert("team".into(), match team {
-                Team::Player(color) => if color == Color::Red { "red" } else { "blue" },
-                Team::None => "none",
-                Team::Death => "death",
-            }.into());
+            map.insert("team".into(), team.into());
             Value::Object(map)
         } else {
             Value::Null
