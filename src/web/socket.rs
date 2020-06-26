@@ -59,7 +59,9 @@ struct Msg {
 
 #[cfg(release)]
 pub fn socket_url() -> String {
-    crate::conf::websocket_url()
+    let url = crate::conf::websocket_url();
+    println!("socket url: {}", &url);
+    url
 }
 
 #[cfg(not(release))]
