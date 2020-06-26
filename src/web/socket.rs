@@ -57,16 +57,10 @@ struct Msg {
     pub steps: Vec<Step>,
 }
 
-#[cfg(release)]
 pub fn socket_url() -> String {
     let url = crate::conf::websocket_url();
     println!("socket url: {}", &url);
     url
-}
-
-#[cfg(not(release))]
-pub fn socket_url() -> String {
-    "ws://localhost:9123".into()
 }
 
 pub fn start() {
