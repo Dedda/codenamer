@@ -1,6 +1,7 @@
 #![feature(decl_macro, proc_macro_hygiene)]
 
 extern crate askama;
+extern crate config;
 extern crate colored;
 extern crate itertools;
 #[macro_use]
@@ -23,7 +24,9 @@ use std::thread::{sleep, spawn};
 use std::time::Duration;
 
 use crate::game::cache::{GameSessionCache, RamGameCache};
+use std::collections::HashMap;
 
+pub mod conf;
 pub mod game;
 #[cfg(debug)]
 pub mod print;
@@ -50,6 +53,9 @@ fn one_day() -> Duration {
 fn main() {
     println!("Codenamer server v{}!", VERSION);
     println!("Languages: {}", res::words::languages().len());
+    let conf = conf::CONFIG.clone();
+    println!("{:?}",
+             conf.try_into::<HashMap<String, String>>().unwrap());
     {
         let gc = game_cache();
         let mut cache =gc .lock().unwrap();

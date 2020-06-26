@@ -1,8 +1,8 @@
 var connection = undefined;
 
-let wsConnection = function wsConnection() {
+let wsConnection = function wsConnection(url) {
     if (connection === undefined) {
-        connection = new WebSocket('ws://' + window.location.hostname + ':9123/ws');
+        connection = new WebSocket(url);
     }
     return connection;
 }

@@ -51,6 +51,7 @@ impl From<&GameWord> for Card {
 struct GamePage {
     game_name: String,
     game_ident: String,
+    socket_url: String,
     cards: Vec<Card>,
 }
 
@@ -60,6 +61,7 @@ impl From<Arc<Mutex<Game>>> for GamePage {
         Self {
             game_name: guard.name.clone(),
             game_ident: guard.ident.clone(),
+            socket_url: socket::socket_url(),
             cards: guard.words.iter().map(|w| w.into()).collect(),
         }
     }

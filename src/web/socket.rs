@@ -57,6 +57,16 @@ struct Msg {
     pub steps: Vec<Step>,
 }
 
+#[cfg(release)]
+pub fn socket_url() -> String {
+    crate::conf::websocket_url()
+}
+
+#[cfg(not(release))]
+pub fn socket_url() -> String {
+    "ws://localhost:9123".into()
+}
+
 pub fn start() {
     listen("0.0.0.0:9123", |out| {
         move |message| {

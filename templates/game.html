@@ -72,7 +72,7 @@
                 }
             });
         };
-        window.c = wsConnection();
+        window.c = wsConnection('{{ socket_url|safe }}');
         window.c.onmessage = function (msg) {
             console.log(msg.data);
             let data = JSON.parse(msg.data);
